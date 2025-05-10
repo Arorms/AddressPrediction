@@ -1,2 +1,4 @@
 **/*.csv
 sorted_data/*
+*.txt
+cache/*.txt

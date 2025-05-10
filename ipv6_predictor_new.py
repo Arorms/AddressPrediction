@@ -33,37 +33,14 @@ def generate_address_segment3():
         addresses.append(f"2001:3:0:bac1::ccdd:{i}")
     return addresses
 
-def generate_address_segment4(required_count):
-    """生成网段 2001:4: 的地址，按需生成 2 * n 条（每组生成两种格式）"""
-    addresses = []
-    count = 0
-    for x in range(512):
-        for y in range(512):
-            if count >= required_count:
-                return addresses
-            part1 = f"{x:02x}{y:02x}"
-            part2 = f"{x:03x}"
-            # 生成两种格式
-            addr1 = f"2001:4:{part1}::{part2}"
-            addr2 = f"2001:4:{part1}:1000::{part2}"
-            addresses.append(addr1)
-            count += 1
-            if count >= required_count:
-                break
-            addresses.append(addr2)
-            count += 1
-    return addresses
-
 def generate_address():
     """整合所有遍历生成地址"""
     seg1 = generate_address_segment1()       # 167936
     seg2 = generate_address_segment2()       # 65536
     seg3 = generate_address_segment3()       # 897
 
-    remaining = 1000000 - (len(seg1) + len(seg2) + len(seg3))  # 应为 765631
-    seg4 = generate_address_segment4(remaining)                 # 精确补齐
 
-    all_addrs = seg1 + seg2 + seg3 + seg4
+    all_addrs = seg1 + seg2 + seg3
 
     return all_addrs
 
