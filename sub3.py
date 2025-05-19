@@ -1,5 +1,3 @@
-
-
 import argparse
 import random
 from pathlib import Path
@@ -86,7 +84,7 @@ def run(
             model.half()
 
     all_results, all_seen = [], set()
-    per_seg_target = min(total_gen // 4, 250_000)
+    per_seg_target = min(total_gen // 4, 5_000)
 
     for seg in range(1, 2):
         seeds = load_seeds(seg)
@@ -121,9 +119,9 @@ def run(
         all_seen.update(seen)
 
     # ---- 写文件 ----
-    all_results = all_results[: min(total_gen, 2500_000)]
+    all_results = all_results[: min(total_gen, 5_000)]
     pd.Series(all_results).to_csv(
-        "submission.csv", index=False, header=False, encoding="utf-8"
+        "submission3.csv", index=False, header=False, encoding="utf-8"
     )
     print(f"\n🎉 已写入 {len(all_results)} 行 -> submission.csv")
 

@@ -2,14 +2,14 @@ import ipaddress, random, pandas as pd
 from collections import Counter, defaultdict
 
 SEED = 'give_data/4_give.txt'
-OUT  = 'submission.csv'
-MAX_SUBMIT = 495_000
+OUT  = 'submission4.csv'
+MAX_SUBMIT = 960_000
 BAND       = 32      # 连续块带宽
 STEP_MAX   = 512
 LOW_XOR    = 0x3FF
-PREF_QUOTA = 634
-PREF_QUOTA_0000 = 400
-
+PREF_QUOTA = 2500
+PREF_QUOTA_0000 = 1500
+TAIL_ENUM_UPPER = 0xFFF  # 不足时枚举 0~0xFFF（含），4 位内
 # 1. 读取
 seeds = [l.strip() for l in open(SEED) if l.strip()]
 seed_set = set(seeds)
@@ -22,7 +22,7 @@ for a in seeds:
     tails[pre64].append(int(ipaddress.IPv6Address(a)) & 0xFFFFFFFF)
 
 # 2. 选热门 /64
-hot64 = [pre for pre,c in cnt64.most_common(900) if c >= 1]
+hot64 = [pre for pre,c in cnt64.most_common(1200) if c >= 1]
 
 submit = set()
 def add(pre, val):
@@ -66,13 +66,21 @@ for pre in hot64:
                     nxt += step
                 if gen>=quota or len(submit)>=MAX_SUBMIT: break
     if gen>=quota or len(submit)>=MAX_SUBMIT: continue
-    # # C. 低位 XOR
-    # for x in base[:min(50,len(base))]:
-    #     for _ in range(256):
-    #         add(pre, x ^ random.randint(0, LOW_XOR)); gen+=1
-    #         if gen>=quota or len(submit)>=MAX_SUBMIT: break
-    #     if gen>=quota or len(submit)>=MAX_SUBMIT: break
-    # if len(submit)>=MAX_SUBMIT: break
+    # C. 低位 XOR
+    for x in base[:min(50,len(base))]:
+        for _ in range(256):
+            add(pre, x ^ random.randint(0, LOW_XOR)); gen+=1
+            if gen>=quota or len(submit)>=MAX_SUBMIT: break
+        if gen>=quota or len(submit)>=MAX_SUBMIT: break
+    if len(submit)>=MAX_SUBMIT: break
+
+#B. 若数量不足，用顺序或随机枚举 tail 补齐
+def add(addr):
+    """压缩后加入集合"""
+    addr = ipaddress.IPv6Address(addr).compressed
+    if addr not in seed_set:
+        submit.add(addr)
+
 
 # 4. 输出
 pd.Series(sorted(submit)[:MAX_SUBMIT]).to_csv(OUT,
